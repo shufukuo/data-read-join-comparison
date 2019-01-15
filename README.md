@@ -23,9 +23,9 @@ MovieLens 20M Dataset: https://grouplens.org/datasets/movielens/
 t0 = time_ns()
 
 for s in ["links", "movies", "ratings", "tags"]
-	eval(
-		Meta.parse( s * " = " * "CSV.read(\"" * s * ".csv\")" )
-	)
+    eval(
+        Meta.parse( s * " = " * "CSV.read(\"" * s * ".csv\")" )
+    )
 end
 
 (time_ns()-t0)/1e9
@@ -55,11 +55,11 @@ RAM 672.3 MB
 <pre><code>require(data.table)
 
 system.time(
-for ( s in c( "links", "movies", "ratings", "tags" ) ) {
-	assign( s,
-		fread( paste( s, ".csv", sep="" ) )
-	)
-}
+    for ( s in c( "links", "movies", "ratings", "tags" ) ) {
+        assign( s,
+            fread( paste( s, ".csv", sep="" ) )
+        )
+    }
 )
 </code></pre>
 <pre><code>user  system elapsed 

@@ -70,11 +70,9 @@ In R, the basic `utils::read.csv` and `data.table::fread` from the package data.
 #### utils::read.csv
 
 <pre><code>system.time(
-
-for ( s in c("links", "movies", "ratings", "tags") ) {
-    assign( s, read.csv( paste( s, ".csv", sep="" ) ) )
-}
-
+    for ( s in c("links", "movies", "ratings", "tags") ) {
+        assign( s, read.csv( paste( s, ".csv", sep="" ) ) )
+    }
 )
 </code></pre>
 <pre><code> user  system elapsed 
@@ -87,6 +85,7 @@ The basic `read.csv` function takes more than a minute to load the 4 datasets, a
 However, the object `ratings` takes only about 381 MB. It might be a garbage collection issue.
 
 #### data.table::fread
+While adding a `require` command and replacing `read.csv` with `fread`, something amazing happens.
 <pre><code>require(data.table)
 
 system.time(
@@ -101,10 +100,10 @@ system.time(
 <pre><code>> object.size(ratings)
 400006992 bytes
 </code></pre>
-It finishes processing within a second. The total memory usage is 452.6 MB, and the object `ratings` takes about 381 MB.
+It finishes processing within a second! The total memory usage is 452.6 MB, and the object `ratings` takes about 381 MB.
 
 #### microbenchmark
-Additionally, the packge microbenckmark can be used to do a quick benckmarking easily in R. In this case, I only try loading ratings.csv, and the `read.csv.sql` function in the packege sqldf is included in addition.
+Additionally, the packge microbenckmark can be used to do a quick benckmarking easily in R. In this case, I only try loading the ratings.csv, and the `read.csv.sql` function in the packege sqldf is included in addition.
 <pre><code>require(sqldf)
 require(data.table)
 require(microbenchmark)
@@ -132,19 +131,17 @@ This results in the following output.
 | R/data.table     |            0.56 |   1.000 |          452.6 |              381.5 |
 
 ## Joining data frames
-Besides I/O performance, computational performance is also intersting to me. So I do some aggregations and joins.
-
-`movies`
-<pre><code>   movieId                              title                                      genres
+Besides I/O performance, computational performance is also interesting to me. So I do some simple aggregations and joins. The data in the movies.csv and ratings.csv are shown below. For more details, please refer to http://files.grouplens.org/datasets/movielens/ml-20m-README.html.
+<pre><code>> head(movies)
+   movieId                              title                                      genres
 1:       1                   Toy Story (1995) Adventure|Animation|Children|Comedy|Fantasy
 2:       2                     Jumanji (1995)                  Adventure|Children|Fantasy
 3:       3            Grumpier Old Men (1995)                              Comedy|Romance
 4:       4           Waiting to Exhale (1995)                        Comedy|Drama|Romance
 5:       5 Father of the Bride Part II (1995)                                      Comedy
 6:       6                        Heat (1995)                       Action|Crime|Thriller
-</code></pre>
-`ratings`
-<pre><code>   userId movieId rating  timestamp
+> head(ratings)
+   userId movieId rating  timestamp
 1:      1       2    3.5 1112486027
 2:      1      29    3.5 1112484676
 3:      1      32    3.5 1112484819

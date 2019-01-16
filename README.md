@@ -44,7 +44,7 @@ julia> @time Base.summarysize(ratings)
 The object `ratings` takes about 663 MB.
 
 ### Python
-The pandas library is used for comparison.
+The pandas library is used.
 <pre><code>import pandas as pd
 import time
 
@@ -101,10 +101,10 @@ system.time(
 <pre><code>> object.size(ratings)
 400006992 bytes
 </code></pre>
-The processing time is less than 3 seconds. The total memory usage is 452.6 MB, and the object `ratings` takes about 381 MB.
+It finishes processing within a second. The total memory usage is 452.6 MB, and the object `ratings` takes about 381 MB.
 
 #### microbenchmark
-Additionally, the packge microbenckmark can be used to do a quick benckmarking easily in R. In this case, I only try loading ratings.csv, and I also compare `read.csv.sql` function in the packege sqldf.
+Additionally, the packge microbenckmark can be used to do a quick benckmarking easily in R. In this case, I only try loading ratings.csv, and the `read.csv.sql` function in the packege sqldf is included in addition.
 <pre><code>require(sqldf)
 require(data.table)
 require(microbenchmark)
@@ -116,6 +116,90 @@ microbenchmark( times=10L,
 )
 </code></pre>
 This results in the following output.
-<pre><code>
+<pre><code>Unit: milliseconds
+         expr       min         lq       mean     median        uq       max neval
+     read.csv 50431.894 50615.3588 52343.2035 50972.7144 52048.159 61703.993    10
+ read.csv.sql 43367.668 43581.3915 44894.9252 45259.6581 45757.378 46788.872    10
+        fread   432.048   489.0825   930.0462   973.6845  1080.307  1447.417    10
+</code></pre>
 
+### Summary table
+| Language/Package | Proc Time (Sec) | Reltive | MEM Total (MB) | MEM `ratings` (MB) |
+| :--------------- | --------------: | ------: | -------------: | -----------------: |
+| Julia/CSV        |           20.31 |  36.268 |         1522.2 |              663.5 |
+| Python/pandas    |            7.06 |  12.607 |          672.4 |              610.4 |
+| R/utils          |           69.13 | 123.446 |         2635.5 |              381.5 |
+| R/data.table     |            0.56 |   1.000 |          452.6 |              381.5 |
+
+## Joining data frames
+Besides I/O performance, computational performance is also intersting to me. So I do some aggregations and joins.
+
+`movies`
+<pre><code>   movieId                              title                                      genres
+1:       1                   Toy Story (1995) Adventure|Animation|Children|Comedy|Fantasy
+2:       2                     Jumanji (1995)                  Adventure|Children|Fantasy
+3:       3            Grumpier Old Men (1995)                              Comedy|Romance
+4:       4           Waiting to Exhale (1995)                        Comedy|Drama|Romance
+5:       5 Father of the Bride Part II (1995)                                      Comedy
+6:       6                        Heat (1995)                       Action|Crime|Thriller
+</code></pre>
+`ratings`
+<pre><code>   userId movieId rating  timestamp
+1:      1       2    3.5 1112486027
+2:      1      29    3.5 1112484676
+3:      1      32    3.5 1112484819
+4:      1      47    3.5 1112484727
+5:      1      50    3.5 1112484580
+6:      1     112    3.5 1094785740
+</code></pre>
+
+<pre><code>   movieId                                     title                           genres   cnt mean_rating
+1:     296                       Pulp Fiction (1994)      Comedy|Crime|Drama|Thriller 67310    4.174231
+2:     356                       Forrest Gump (1994)         Comedy|Drama|Romance|War 66172    4.029000
+3:     318          Shawshank Redemption, The (1994)                      Crime|Drama 63366    4.446990
+4:     593          Silence of the Lambs, The (1991)            Crime|Horror|Thriller 63299    4.177057
+5:     480                      Jurassic Park (1993) Action|Adventure|Sci-Fi|Thriller 59715    3.664741
+6:     260 Star Wars: Episode IV - A New Hope (1977)          Action|Adventure|Sci-Fi 54502    4.190672
+</code></pre>
+
+<pre><code>import numpy as np
+
+t0 = time.time()
+cnt_movie_ratings = ratings.groupby('movieId').agg( {'movieId': np.size, 'rating': np.mean} ) \
+    .rename( columns = {'movieId': 'cnt', 'rating': 'mean_rating'} ) \
+    .reset_index() \
+    .merge( movies, how='left', on='movieId' ) \
+    .sort_values( ['cnt', 'mean_rating'], ascending=[False, False] )
+print( time.time()-t0 )
+</code></pre>
+
+<pre><code>require(sqldf)
+
+system.time(
+    cnt_movie_ratings <- sqldf( "
+        select dt1.*, dt2.title, dt2.genres
+        from
+            (
+            select movieId, count(movieId) as cnt, avg(rating) as mean_rating
+            from ratings
+            group by movieId
+            ) as dt1
+        left join movies as dt2
+        on dt1.movieId = dt2.movieId
+        order by cnt desc, mean_rating desc
+        "
+    )
+)
+</code></pre>
+
+<pre><code>require(data.table)
+
+system.time(
+    cnt_movie_ratings <- movies[
+        ratings[ , .(cnt=.N, mean_rating=mean(rating)), keyby=movieId ],
+        on="movieId"
+        ] [
+        order(-cnt, -mean_rating)
+        ]
+)
 </code></pre>

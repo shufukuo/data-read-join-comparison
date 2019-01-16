@@ -28,9 +28,9 @@ for s in ["links", "movies", "ratings", "tags"]
     )
 end
 
-(time_ns()-t0)/1e9
+(time_ns() - t0) / 1e9
 </code></pre>
-<pre><code>julia> (time_ns()-t0)/1e9
+<pre><code>julia> (time_ns() - t0) / 1e9
 20.311318892
 </code></pre>
 RAM 1522.2 MB
@@ -44,9 +44,9 @@ t0 = time.time()
 for s in ["links", "movies", "ratings", "tags"]:
     exec( s + """ = pd.read_csv( '""" + s + """.csv')""" )
 
-print( time.time()-t0 )
+print( time.time() - t0 )
 </code></pre>
-<pre><code>>>> print( time.time()-t0 )
+<pre><code>>>> print( time.time() - t0 )
 7.060875177383423
 </code></pre>
 RAM 672.3 MB
@@ -55,10 +55,8 @@ RAM 672.3 MB
 <pre><code>require(data.table)
 
 system.time(
-    for ( s in c( "links", "movies", "ratings", "tags" ) ) {
-        assign( s,
-            fread( paste( s, ".csv", sep="" ) )
-        )
+    for ( s in c("links", "movies", "ratings", "tags") ) {
+        assign( s, fread( paste( s, ".csv", sep="" ) ) )
     }
 )
 </code></pre>

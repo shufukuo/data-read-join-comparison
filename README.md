@@ -65,7 +65,7 @@ The processing time is about 7 seconds. The total memory usage is 672.4 MB, and 
 </code></pre>
 
 ### R
-In R, the basic `utils::read.csv` and `data.table::fread` from the package data.table are compared.
+The basic `utils::read.csv` and `data.table::fread` are used.
 
 #### utils::read.csv
 

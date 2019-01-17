@@ -114,7 +114,7 @@ microbenchmark( times=10L,
     fread        = fread("ratings.csv")
 )
 </code></pre>
-This results in the following output.
+The output is shown below.
 <pre><code>Unit: milliseconds
          expr       min         lq       mean     median        uq       max neval
      read.csv 50431.894 50615.3588 52343.2035 50972.7144 52048.159 61703.993    10
@@ -149,27 +149,23 @@ Besides I/O performance, computational performance is also interesting to me. So
 5:      1      50    3.5 1112484580
 6:      1     112    3.5 1094785740
 </code></pre>
+To know the rating count and the mean rating of each movie, I use the pandas library in Python, and the sqldf and data.table packages in R to do the aggregation with join. The following shows the codes in Python and R.
 
-<pre><code>   movieId                                     title                           genres   cnt mean_rating
-1:     296                       Pulp Fiction (1994)      Comedy|Crime|Drama|Thriller 67310    4.174231
-2:     356                       Forrest Gump (1994)         Comedy|Drama|Romance|War 66172    4.029000
-3:     318          Shawshank Redemption, The (1994)                      Crime|Drama 63366    4.446990
-4:     593          Silence of the Lambs, The (1991)            Crime|Horror|Thriller 63299    4.177057
-5:     480                      Jurassic Park (1993) Action|Adventure|Sci-Fi|Thriller 59715    3.664741
-6:     260 Star Wars: Episode IV - A New Hope (1977)          Action|Adventure|Sci-Fi 54502    4.190672
-</code></pre>
-
+Python/pandas
 <pre><code>import numpy as np
 
 t0 = time.time()
+
 cnt_movie_ratings = ratings.groupby('movieId').agg( {'movieId': np.size, 'rating': np.mean} ) \
     .rename( columns = {'movieId': 'cnt', 'rating': 'mean_rating'} ) \
     .reset_index() \
     .merge( movies, how='left', on='movieId' ) \
     .sort_values( ['cnt', 'mean_rating'], ascending=[False, False] )
+
 print( time.time()-t0 )
 </code></pre>
 
+R/sqldf
 <pre><code>require(sqldf)
 
 system.time(
@@ -189,6 +185,7 @@ system.time(
 )
 </code></pre>
 
+R/data.table
 <pre><code>require(data.table)
 
 system.time(
@@ -199,4 +196,22 @@ system.time(
         order(-cnt, -mean_rating)
         ]
 )
+</code></pre>
+
+And the performance is shown below. The pandas and data.table are quite fast, comparing to sqldf. I am also interested to see the performance in SAS but I am not able to do so with my PC. It would be great to know that.
+
+| Language/Package | Proc Time (Sec) | Reltive |
+| :--------------- | --------------: | ------: |
+| Python/pandas    |            1.66 |   3.018 |
+| R/sqldf          |           21.21 |  38.564 |
+| R/data.table     |            0.55 |   1.000 |
+
+Finally, the resulting table looks like this.
+<pre><code>   movieId                                     title                           genres   cnt mean_rating
+1:     296                       Pulp Fiction (1994)      Comedy|Crime|Drama|Thriller 67310    4.174231
+2:     356                       Forrest Gump (1994)         Comedy|Drama|Romance|War 66172    4.029000
+3:     318          Shawshank Redemption, The (1994)                      Crime|Drama 63366    4.446990
+4:     593          Silence of the Lambs, The (1991)            Crime|Horror|Thriller 63299    4.177057
+5:     480                      Jurassic Park (1993) Action|Adventure|Sci-Fi|Thriller 59715    3.664741
+6:     260 Star Wars: Episode IV - A New Hope (1977)          Action|Adventure|Sci-Fi 54502    4.190672
 </code></pre>

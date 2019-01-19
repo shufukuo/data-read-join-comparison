@@ -1,4 +1,4 @@
-# A simple comparison
+# A simple comparison among Julia, Python, and R
 Comaring processing time of loading CSV files and joining data frames in Julia, Python, and R.
 
 ### Data resource
@@ -131,7 +131,7 @@ The output is shown below.
 | R/data.table     |            0.56 |   1.000 |          452.6 |              381.5 |
 
 ## Joining data frames
-Besides I/O performance, computational performance is also interesting to me. So I do some simple aggregations and joins. The data in the movies.csv and ratings.csv are shown below. For more details, please refer to http://files.grouplens.org/datasets/movielens/ml-20m-README.html.
+Besides I/O performance, computational performance is also interesting to me. So I do some simple aggregations and joins. The part of data in the movies.csv and ratings.csv are shown below. For more details, please refer to http://files.grouplens.org/datasets/movielens/ml-20m-README.html.
 <pre><code>> head(movies)
    movieId                              title                                      genres
 1:       1                   Toy Story (1995) Adventure|Animation|Children|Comedy|Fantasy
